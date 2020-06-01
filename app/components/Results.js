@@ -64,7 +64,7 @@ function resultsReducer(state, action) {
     return {
       ...state,
       loading: false,
-      error: 'oh fuck'
+      error: 'There was an error fetching the repositories.'
     }
   }
 }
