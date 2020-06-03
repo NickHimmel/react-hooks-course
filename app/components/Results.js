@@ -69,29 +69,36 @@ function resultsReducer(state, action) {
   }
 }
 
-export default function Results(props) {
-  const [playerOne, setPlayerOne] = React.useState('');
-  const [playerTwo, setPlayerTwo] = React.useState('');
-
-  const [state, dispatch] = React.useReducer(
-    resultsReducer,
-    {
-      winner: null,
-      loser: null,
+function battleReducer(state, action) {
+  if (action.type === 'success') {
+    return {
+      winner: action.winner,
+      loser: action.loser,
       error: null,
-      loading: true
-  })
+      loading: false
+    }
+  } else if (action.type === 'error') {
+    return {
+      ...state,
+      error: action.message,
+      loading: false
+    }
+  } else {
+    throw new Error(`That action type isn't supported`)
+  }
+}
+
+export default function Results({ location }) {
+  const { playerOne, playerTwo } = queryString.parse(location.search)
+  const [state, dispatch] = React.useReducer(
+    battleReducer,
+    { winner: null, loser: null, error: null, loading: true }
+  )
 
   React.useEffect(() => {
-    const { playerOne, playerTwo } = queryString.parse(props.location.search)
-    dispatch({ type: 'fetch' })
-
     battle([ playerOne, playerTwo ])
-      .then((players) => dispatch({ type: 'success', players }))
-      .catch(({ message }) => {
-        console.warn(message)
-        dispatch({ type: 'error' })
-      })
+      .then((players) => dispatch({ type: 'success', winner: players[0], loser: players[1] }))
+      .catch(({ message }) => dispatch({ type: 'error', message }))
   }, [playerOne, playerTwo])
 
   const { winner, loser, error, loading } = state

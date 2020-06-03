@@ -10,21 +10,17 @@ const Popular = React.lazy(() => import('./components/Popular'))
 const Battle = React.lazy(() => import('./components/Battle'))
 const Results = React.lazy(() => import('./components/Results'))
 
-export default function App () {
+function App () {
   const [theme, setTheme] = React.useState('light')
 
-  const toggleTheme = () => {
-    setTheme((theme) => {
-      return theme === 'light' ? 'dark' : 'light'
-    })
-  }
+  const toggleTheme = () => setTheme((theme) => theme === 'light' ? 'dark' : 'light')
 
   return (
     <Router>
-      <ThemeProvider value={{theme, toggleTheme}}>
+      <ThemeProvider value={theme}>
         <div className={theme}>
           <div className='container'>
-            <Nav />
+            <Nav toggleTheme={toggleTheme} />
 
             <React.Suspense fallback={<Loading />} >
               <Switch>

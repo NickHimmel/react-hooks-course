@@ -100,42 +100,56 @@ function languageReducer(state, action) {
   }
 }
 
+function popularReducer (state, action) {
+  if (action.type === 'success') {
+     return {
+       ...state,
+       [action.selectedLanguage]: action.repos,
+       error: null
+     }
+  } else if (action.type === 'error') {
+    return {
+      ...state,
+      error: action.error.message
+    }
+  } else {
+    throw new Error(`That action type isn't supported.`)
+  }
+}
+
 export default function Popular() {
-  const [language, setLanguage] = React.useState('All')
+  const [selectedLanguage, setSelectedLanguage] = React.useState('All')
   const [state, dispatch] = React.useReducer(
-    languageReducer,
-    {
-       repos: null,
-       error: null,
-       loading: true
-  })
+    popularReducer,
+    { error: null }
+  )
+
+  const fetchedLanguages = React.useRef([])
 
   React.useEffect(() => {
-    dispatch({ type: 'fetch' })
-    fetchPopularRepos(language)
-      .then((data) => dispatch({ type: 'success', data}))
-      .catch((e) => {
-        console.warn(e.message)
-        dispatch({ type: 'error' })
-      })
-  }, [language])
+    if (fetchedLanguages.current.includes(selectedLanguage) === false) {
+      fetchedLanguages.current.push(selectedLanguage)
 
-  const updateLanguage = (selectedLanguage) => {
-    setLanguage(selectedLanguage)
-  }
+      fetchPopularRepos(selectedLanguage)
+        .then((repos) => dispatch({ type: 'success', selectedLanguage, repos }))
+        .catch((error) => dispatch({ type: 'error', error }))
+    }
+  }, [fetchedLanguages, selectedLanguage])
+
+  const isLoading = () => !state[selectedLanguage] && state.error === null
 
   return (
     <React.Fragment>
         <LangaugesNav
-          selected={language}
-          onUpdateLanguage={updateLanguage}
+          selected={selectedLanguage}
+          onUpdateLanguage={setSelectedLanguage}
         />
 
-        {state.loading && <Loading text='Fetching Repos' />}
+        {isLoading() && <Loading text='Fetching Repos' />}
 
         {state.error && <p className='center-text error'>{error}</p>}
 
-        {state.repos && <ReposGrid repos={state.repos} />}
+        {state[selectedLanguage] && <ReposGrid repos={state[selectedLanguage]} />}
       </React.Fragment>
   )
 }
